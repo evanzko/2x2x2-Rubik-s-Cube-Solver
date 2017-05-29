@@ -1,0 +1,1 @@
+This project attempts to use Q-Learning to solve a 2x2x2 rubik's cube

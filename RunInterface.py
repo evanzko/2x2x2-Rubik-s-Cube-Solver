@@ -7,7 +7,7 @@ import MDP, Rubiks_Cube, Test_Rubiks
 def test():
     '''Create the MDP, then run an episode of random actions for 10 steps.'''
     rubiks_MDP = MDP.MDP()
-    rubiks_MDP.register_start_state("wwggbbwwrrrryyyyoobbggoo")
+    rubiks_MDP.register_start_state("wwoobbggrrrryyyyoowwggbb")
     rubiks_MDP.register_actions(Test_Rubiks.ACTIONS)
     rubiks_MDP.register_operators(Test_Rubiks.OPERATORS)
     #rubiks_MDP.generateAllStates()
@@ -15,7 +15,7 @@ def test():
     rubiks_MDP.register_transition_function(Test_Rubiks.T)
     rubiks_MDP.register_reward_function(Test_Rubiks.R)
     #rubiks_MDP.random_episode(1000)
-    rubiks_MDP.QLearning(0.98, 500, 0.2)
+    rubiks_MDP.QLearning(0.98, 1, 0.1)
 
 
 test()

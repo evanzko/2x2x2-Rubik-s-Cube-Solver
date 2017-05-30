@@ -6,7 +6,7 @@
 ACTIONS = ['R', 'L', 'B', 'D', 'F',  'U', 'E']
 
 # g = green, w = white, r = red, y = yellow, b = blue, o = orange
-INITIAL_STATE = "bbggbbbbrrrrrrrrggbbgggg"
+INITIAL_STATE = "wwoobbggrrrryyyyoowwggbb"
 #
 class Operator:
 
@@ -41,7 +41,7 @@ UpperOp = Operator("Rotate top to the left 180 degrees",\
                    lambda s: apply_move(s,6))
 EndOp = Operator("Go to puzzel over state",\
                  lambda s:can_move(s,2),\
-                 lambda s: apply_move(s,7))
+                 lambda s: "GAME_OVER")
 
 OPERATORS = [RightOp, LeftOp, BackOp, DownOp, FrontOp, UpperOp,  EndOp]
 
@@ -151,7 +151,7 @@ def rotate_right_face(elements):
 # Returns whether the rubik's cube has been solved
 def is_solved(s):
     if len(s) != 24:
-        return False
+        return True
     elif(s[0]==s[1] and s[1]==s[2] and s[2]==s[3] and s[4]==s[5] and s[5]==s[6]\
        and s[6]==s[7] and s[8]==s[9] and s[9]==s[10] and s[10]==s[11] and s[12]==s[13]\
        and s[13] == s[14] and s[14]==s[15] and s[16]==s[17] and s[17]==s[18] and s[18]==s[19] \
@@ -177,14 +177,15 @@ def T(s,a,sp):
         if (is_solved(s)): return 1
         else: return 0
     if a =='E' and s==sp: return 0
-    if a =='E' and not is_solved(s): return 0
+    if a =='E' and is_solved(s): return 1
+    if a == 'E' and not is_solved(s): return 0
     if is_solved(s) and a != 'E': return 0
     if sp == apply_move(s, 1):
         if a=='R': return P_noraml
         if a=='L': return P_noise
     if sp == apply_move(s, 2):
-        if a=='L': return P_noise
-        if a=='R': return P_noraml
+        if a=='L': return P_noraml
+        if a=='R': return P_noise
     if sp == apply_move(s, 3):
         if a=='B': return P_noraml
         if a=='F': return P_noise
@@ -209,5 +210,5 @@ def T(s,a,sp):
  # Returns the reward associated with transitioning from s to sp via action a.
 def R(s, a, sp):
     if s == "GAME_OVER": return 0
-    if is_solved(s): return 10,000
-    return 0  # cost of living
+    if is_solved(s): return 10000
+    return -10  # cost of living

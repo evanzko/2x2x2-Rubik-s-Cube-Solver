@@ -9,26 +9,36 @@
 
 #######################################################
 ## How to use:                                       ##
-## 1)
-## 2)
-## 3)
+## 1) Either Select Initialize Simple Demo or
+# initialize Coplete Demo
+## 2) Display Q values to show representation of state
+# space
+## 3) Simulate Rubix's Cube solution to initialize
+# cub rep at start state
+## 4) Next Rubix's Cube move to get next rubix cube state
 #######################################################
+
+# Imports section
 from tkinter import *
 import random
 import time
 import MDP, Test_Rubiks
 
+# Initialization of MDP and GUI
 rubiks_MDP = rubiks_MDP = MDP.MDP()
 master = Tk()
 
+# Global Variable to show if MDP has been initialized
+is_initialized = False
 
 
+# Global variables containing points for boxes
 top_left_x = [21, 91, 21, 91, 161, 231, 161, 231, 161, 231, 161, 231,\
-             161, 231, 161, 231, 301, 371, 301, 371, 441, 511, 441, 511]
+              161, 231, 161, 231, 301, 371, 301, 371, 441, 511, 441, 511]
 top_left_y = [166, 166, 236, 236, 166, 166, 236, 236, 26, 26, 96, 96, 306,\
               306, 376, 376, 166, 166, 236, 236, 166, 166, 236, 236]
 bottom_right_x = [89, 159, 89, 159, 229, 299, 229, 299, 229, 299, 229,\
-                 299, 229, 299, 229, 299, 369, 439, 369, 439, 509, 579, 509, 579]
+                  299, 229, 299, 229, 299, 369, 439, 369, 439, 509, 579, 509, 579]
 bottom_right_y =[234, 234, 304, 304, 234, 234, 304, 304, 94, 94, 164, 164,\
                  374, 374, 444, 444, 234, 234, 304, 304, 234, 234, 304, 304]
 
@@ -78,11 +88,35 @@ w.create_line(510, 165, 510, 305, fill="#000000", width=3)
 w.create_line(580, 165, 580, 305, fill="#000000", width=3)
 colors = [ 'g', 'w', 'r', 'y', 'b', 'o']
 
-
+# Gives intro for GUI
 def intro():
     print("Welcome to the 2x2 rubik's cube solver")
+    print("How to use interface:")
+    print("1) Select either initialize simple demo or initialize complete demo")
+    print("2) Display Q values to show representation of state space.")
+    print("3) Simulate Rubik's Cube solution to initialize cube representation at start state.")
+    print("4) Keep pressing next Rubik's Cube move to get next rubik's cube state to show how to solve cube.")
+
 intro()
 
+# initializes simple demo
+def callback_1():
+    global rubiks_MDP
+    global is_initialized
+    if (is_initialized):
+        rubiks_MDP.QLearning(0.9, 10, 0.2)
+    else:
+        rubiks_MDP.register_start_state("wwoobbggrrrryyyyoowwggbb")
+        rubiks_MDP.register_actions(Test_Rubiks.ACTIONS)
+        rubiks_MDP.register_operators(Test_Rubiks.OPERATORS)
+        rubiks_MDP.register_transition_function(Test_Rubiks.T)
+        rubiks_MDP.register_reward_function(Test_Rubiks.R)
+        rubiks_MDP.generateAllStates()
+        is_initialized = True
+        rubiks_MDP.QLearning(0.9, 20, 0.2)
+
+# Represents Q-Values by showing each state as a box with
+# color determined by max Q value
 def callback_2():
     global  rubiks_MDP
     if rubiks_MDP is None:
@@ -133,6 +167,7 @@ def callback_2():
             w.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y, fill=hex_string)
             j = j + 1
 
+# Converts base 10 to hex
 def convert_to_hex(r, g, b):
     hex_string = "#"
     r_str = "0x{:02x}".format(r)
@@ -141,7 +176,7 @@ def convert_to_hex(r, g, b):
     hex_string = hex_string + r_str[2] + r_str[3] + g_str[2] + g_str[3] + b_str[2] + b_str[3]
     return hex_string
 
-# Prints random colors into boxes
+# Represents initial state of cube
 def callback_3():
     global top_left_x
     global top_left_y
@@ -173,21 +208,7 @@ def callback_3():
                                fill=color_vals[j])
         rubiks_MDP.current_state = rubiks_MDP.start_state
 
-
-def callback_1():
-    global rubiks_MDP
-    global is_initialized
-    if (is_initialized):
-        rubiks_MDP.QLearning(0.9, 10, 0.2)
-    else:
-        rubiks_MDP.register_start_state("wwoobbggrrrryyyyoowwggbb")
-        rubiks_MDP.register_actions(Test_Rubiks.ACTIONS)
-        rubiks_MDP.register_operators(Test_Rubiks.OPERATORS)
-        rubiks_MDP.register_transition_function(Test_Rubiks.T)
-        rubiks_MDP.register_reward_function(Test_Rubiks.R)
-        rubiks_MDP.generateAllStates()
-        rubiks_MDP.QLearning(0.9, 10, 0.2)
-
+#  Updates representation of cube based on optimal action
 def callback_4():
     global top_left_x
     global top_left_y
@@ -226,18 +247,27 @@ def callback_4():
                 w.create_rectangle(top_left_x[j], top_left_y[j], bottom_right_x[j], bottom_right_y[j],
                                    fill=color_vals[j])
 
+# initializes complete demo of cube
 def callback_5():
     global rubiks_MDP
-    rubiks_MDP.register_start_state("wwoobbggrrrryyyyoowwggbb")
-    rubiks_MDP.register_actions(Test_Rubiks.ACTIONS)
-    rubiks_MDP.register_operators(Test_Rubiks.OPERATORS)
-    rubiks_MDP.register_transition_function(Test_Rubiks.T)
-    rubiks_MDP.register_reward_function(Test_Rubiks.R)
-    rubiks_MDP.generateAllStates()
-    rand_state = rubiks_MDP.get_random_state()
-    rubiks_MDP.register_start_state(rand_state)
-    rubiks_MDP.QLearning(0.97, 100, 0.2)
+    global is_initialized
+    if (is_initialized):
+        rand_state = rubiks_MDP.get_random_state()
+        rubiks_MDP.register_start_state(rand_state)
+        rubiks_MDP.QLearning(0.97, 100, 0.2)
+    else :
+        rubiks_MDP.register_start_state("wwoobbggrrrryyyyoowwggbb")
+        rubiks_MDP.register_actions(Test_Rubiks.ACTIONS)
+        rubiks_MDP.register_operators(Test_Rubiks.OPERATORS)
+        rubiks_MDP.register_transition_function(Test_Rubiks.T)
+        rubiks_MDP.register_reward_function(Test_Rubiks.R)
+        rubiks_MDP.generateAllStates()
+        rand_state = rubiks_MDP.get_random_state()
+        rubiks_MDP.register_start_state(rand_state)
+        is_initialized = True
+        rubiks_MDP.QLearning(0.97, 100, 0.2)
 
+## Button Section
 a = Button(master, text = "Initialize Solver Simple Demo", command=callback_1)
 a.pack()
 

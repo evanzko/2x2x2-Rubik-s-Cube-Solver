@@ -101,6 +101,7 @@ intro()
 
 # initializes simple demo
 def callback_1():
+    print("Starting Simple Demo")
     global rubiks_MDP
     global is_initialized
     if (is_initialized):
@@ -249,6 +250,7 @@ def callback_4():
 
 # initializes complete demo of cube
 def callback_5():
+    print("Starting complete demo")
     global rubiks_MDP
     global is_initialized
     if (is_initialized):

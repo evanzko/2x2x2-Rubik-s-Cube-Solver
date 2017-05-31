@@ -22,15 +22,13 @@
 
 import math
 import random
-import time
 
-REPORTING = False
+REPORTING = True
 
 class MDP:
     def __init__(self):
         self.known_states = set ()
         self.succ = {}
-        self.heuristics = {}
 
     def register_start_state(self, start_state):
         self.start_state = start_state
@@ -47,6 +45,11 @@ class MDP:
 
     def register_reward_function(self, reward_function):
         self.R = reward_function
+
+    def register_heuristic_function(self, heuristic_function):
+        self.H = heuristic_function
+    def curr(self):
+        return self.current_state
 
     def random_episode(self, nsteps):
         self.current_state = self.start_state
@@ -73,9 +76,9 @@ class MDP:
                 r = self.R(s, a, sp)
                 s = sp
                 break
-        self.current_state = s
+        self.current_state = self.pickNextState(a, s)
         self.known_states.add(self.current_state)
-        if REPORTING: print("After action "+a+", moving to state "+str(self.current_state)+\
+        if REPORTING: print("After action "+a+", moving to state "+str(self.current_state)+ \
                             "; reward is "+str(r))
 
     def state_neighbors(self, state):
@@ -123,42 +126,38 @@ class MDP:
                 for element in neighbors:
                     OPEN.append(element)
 
-
-
     # Determines the best action based on a given state
     # and returns that action
     def findMaxMove(self, state):
         action = random.choice(self.actions)
-        print(action)
         max_val = -math.inf
         for actions in self.actions:
-            cur_val = 0
             cur_tuple = (state, actions)
-            cur_val = cur_val + self.QValues.get(cur_tuple)
-            for adj in self.state_neighbors(state):
-                if cur_tuple in self.QValues:
-                    cur_val = cur_val + self.T(state, actions, adj) * (self.calc_heuristic(adj))
+            if cur_tuple in self.QValues:
+                cur_val = self.QValues.get(cur_tuple)
+            else:
+                cur_val = 0
+                "Throw error, not good!"
             if (cur_val > max_val):
                 max_val = cur_val
                 action = actions
-        return action
+            return action
 
     # Function calculates the Q values for each (state, action) tuple
     # based upon Q learning alg
     def QLearning(self, discount, nEpisodes, epsilon):
         self.QValues = {} #hash table to map (state, action) tuples to values
         self.move_times = {} #hash table to map (state, action) tuples to number
-                             # times specific tuple evaluated
+        # times specific tuple evaluated
+        self.generateAllStates()
         for states in self.known_states:
             for actions in self.actions:
                 s = (states,actions)
                 self.QValues.update({s: 0})
                 self.move_times.update({s: 0})
-        temp = random.sample(self.known_states, 1)
-        final_String = ""
         for i in range(nEpisodes):
-            moves = 0
-            self.current_state = temp[0]
+            self.current_state = self.start_state
+            print(self.current_state)
             while self.current_state != "GAME_OVER":
                 random_val = round(epsilon * 1000) # anticipate epsilon will only be up to 3 decimals
                 rand = random.randrange(1000)
@@ -174,11 +173,8 @@ class MDP:
                     if (adj not in self.known_states):
                         print(len(self.known_states))
                         print("This should never happen")
-                    if (Qtuple not in self.QValues):
-                        print("PPPPRRRRRRROOOOOOOOBBBBBBBLLLLLLLEEEEEMMMMMM")
                     curr_val = curr_val + self.T(self.current_state, action, adj) * \
-                                          (self.R(self.current_state, action, adj) + (
-                                              discount * self.QValues.get(Qtuple)))
+                                          (self.R(self.current_state, action, adj) + (discount * self.H(self.current_state)))
                 num_trials = self.move_times.get(tup)
                 num_trials = num_trials + 1
                 self.move_times.update({tup: num_trials})
@@ -186,65 +182,7 @@ class MDP:
                 update_tuple_val = ((1 - (1/num_trials)) * curr_tuple_val) + ((1/num_trials) * curr_val)
                 self.QValues.update({tup:update_tuple_val})
                 self.take_action(action)
-                # print("The new state is: " + self.current_state)
-                moves += 1
-
-            final_String += "Generation " + str(i) + " took " + str(moves) + " moves to solve"
-            final_String += "\n"
-        print(final_String)
-        print("Solved " + str(i+1) + " times")
-
-    def calc_heuristic(self, curr_state):
-        value = 0
-        #check if the curr_state is over
-        if (curr_state != "GAME_OVER" and curr_state not in self.heuristics):
-
-            for i in range(0, 23, 4):
-                if i % 2 == 0:
-                    temp = i + 3
-                    if curr_state[i] != curr_state[temp]:
-                        value += 1
-                else:
-                    temp = i + 1
-                    if curr_state[i] != curr_state[temp]:
-                        value += 1
-            self.heuristics.update({curr_state: (value)})
-        elif curr_state in self.heuristics:
-            value = self.heuristics.get(curr_state)
-        else:
-            value = 1000
-        return value
-
-
-    # def calc_heuristic(self, curr_state):
-    #     if (curr_state != "GAME_OVER" and curr_state not in self.heuristics):
-    #         value = 0
-    #         if (curr_state[1] != curr_state[3]) or (curr_state[4] != curr_state[6]):
-    #                 value += 10
-    #         if (curr_state[12] != curr_state[13]) or (curr_state[6] != curr_state[7]):
-    #                 value += 10
-    #         if (curr_state[18] != curr_state[16]) or (curr_state[5] != curr_state[7]):
-    #                 value += 10
-    #         if (curr_state[10] != curr_state[11]) or (curr_state[4] != curr_state[5]):
-    #                 value += 10
-    #         if (curr_state[20] != curr_state[21] or curr_state[21] != curr_state[22] or curr_state[22] != curr_state[23]):
-    #             value += 1
-    #         if (curr_state[0] != curr_state[1] or curr_state[1] != curr_state[2] or curr_state[2] != curr_state[3]):
-    #             value += 1
-    #         if (curr_state[4] != curr_state[5] or curr_state[5] != curr_state[6] or curr_state[6] != curr_state[7]):
-    #             value += 1
-    #         if (curr_state[8] != curr_state[9] or curr_state[9] != curr_state[10] or curr_state[10] != curr_state[11]):
-    #             value += 1
-    #         if (curr_state[12] != curr_state[13] or curr_state[13] != curr_state[14] or curr_state[14] != curr_state[15]):
-    #             value += 1
-    #         if (curr_state[16] != curr_state[17] or curr_state[17] != curr_state[18] or curr_state[18] != curr_state[19]):
-    #             value += 1
-    #         self.heuristics.update({curr_state: (1000 / (value + 1))})
-    #         return (1000 / (value + 1))
-    #     elif curr_state in self.heuristics:
-    #         return self.heuristics.get(curr_state)
-    #     else :
-    #         return 2000
+            print("Solved " + str(i) + " times")
 
     # Returns the next state based on probability of reaching
     # that state based on current (state, action) pair
@@ -274,3 +212,11 @@ class MDP:
                 if (val > max_val):
                     self.optPolicy.update({state: action})
                     max_val = val
+
+
+
+
+
+
+
+

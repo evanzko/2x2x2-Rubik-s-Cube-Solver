@@ -2,12 +2,14 @@
 # May 30, 2017
 # CSE 415 Final Project
 # File creates the MDP associated with a 2X2X2 rubik's cube
-
+import random
 ACTIONS = ['R', 'L', 'B', 'D', 'F',  'U', 'E']
 
 # g = green, w = white, r = red, y = yellow, b = blue, o = orange
-INITIAL_STATE = "wwoobbggrrrryyyyoowwggbb"
-#
+INITIAL_STATE = "WWOOBBGGWWOOGGBBYRYRRYRY"
+COLORS = ["ORANGE", "BLUE", "WHITE", "GREEN", "RED", "YELLOW"]
+#Each number represents what color in the COLOR the square will start out as
+DEFAULT_COLOR_ORIENTATION = (2,2,0,0,1,1,3,3,2,2,0,0,3,3,1,1,5,4,5,4,4,5,4,5)
 class Operator:
 
   def __init__(self, name, precond, state_transf):
@@ -53,6 +55,49 @@ ActionOps = {'R': [RightOp, LeftOp],
              'F': [FrontOp, BackOp],
              'U': [UpperOp, DownOp],
              'E': [EndOp, EndOp]}
+
+def createInitialState():
+    global INITIAL_STATE
+    requestColors = input("Would you like to customize the colors of your Rubik's Cube? (y/n) ")
+    if requestColors is 'y':
+        resetInitialStateColors()
+        getUserColors()
+        fillState()
+    describeState(INITIAL_STATE)
+    return INITIAL_STATE
+
+def resetInitialStateColors():
+    global COLORS
+    for i in range(6):
+        COLORS[i] = None
+
+# getUserColors:
+# This function asks the user to enter colors and sets the mapping of the colors
+# allowing it to be used when the cube is drawn on console.
+def getUserColors():
+    for i in range(6):
+        color = input("Please Enter Color " + str(i+1) + ": ").upper()
+        while checkIfColorExists(color):
+            print("The color has initials that already exist")
+            color = input("Please Enter Color " + str(i + 1) + ": ").upper()
+        COLORS[i] = color
+
+# checkIfColorExists:
+# This function takes a character and checks whether the color has already been
+# assigned to the map. If it has, it returns true, else it returns a false.
+def checkIfColorExists(color):
+    global COLORS
+    if color in COLORS:
+        return True
+    return False
+
+def fillState():
+    global INITIAL_STATE, DEFAULT_COLOR_ORIENTATION, COLORS
+    temp = list(INITIAL_STATE)
+    for i in range(23):
+        col = COLORS[DEFAULT_COLOR_ORIENTATION[i]]
+        temp[i] = col[0]
+    INITIAL_STATE = "".join(temp)
 
 # Returns whether the move is valid
 def can_move(s, state_type):
@@ -212,3 +257,27 @@ def R(s, a, sp):
     if s == "GAME_OVER": return 0
     if is_solved(s): return 10000
     return -10  # cost of living
+
+# describeState
+# This state takes a state and prints out a visual for the state.
+def describeState(state):
+    print("         -------")
+    for i in range(8, 11, 2):
+        print("        | " + state[i] + " | " + state[i+1] + " | ")
+    print("---------------------------------")
+    line = "| "
+    line += state[0] + " | " + state[1] + " | "
+    line += state[4] + " | " + state[5] + " | "
+    line += state[16] + " | " + state[17] + " | "
+    line += state[20] + " | " + state[21] + " | "
+    line += "\n"
+    line += "| "
+    line += state[2] + " | " + state[3] + " | "
+    line += state[6] + " | " + state[7] + " | "
+    line += state[18] + " | " + state[19] + " | "
+    line += state[22] + " | " + state[23] + " | "
+    print(line)
+    print("---------------------------------")
+    for i in range(12, 15, 2):
+        print("        | " + state[i] + " | " +  state[i+1] + " | ")
+    print("         -------")

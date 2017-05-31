@@ -15,6 +15,9 @@
 #######################################################
 from tkinter import *
 import random
+import MDP, Test_Rubiks
+
+rubiks_MDP = rubiks_MDP = MDP.MDP()
 
 master = Tk()
 
@@ -64,36 +67,57 @@ w.create_line(580, 165, 580, 305, fill="#000000", width=3)
 
 
 colors = [ 'g', 'w', 'r', 'y', 'b', 'o']
-def callback():
-    max_state_vals = []
-    top_left_x = 601
-    top_left_y = 32
-    bottom_right_x = 604
-    bottom_right_y = 35
-    for i in range(16128):
-        curr_val =random.randrange(1000)
-        max_state_vals.append(curr_val)
-    for j in range(16128):
-        if(j % 128 == 0):
-            top_left_x = 601
-            bottom_right_x = 604
-            top_left_y = top_left_y + 3
-            bottom_right_y = bottom_right_y + 3
-        else:
-            top_left_x = top_left_x + 3
-            bottom_right_x = bottom_right_x + 3
-        curr_val = max_state_vals[j]
-        r = 0
-        g = 0
-        b = 0
-        if (curr_val < 500) :
-            r = 255
-            g = 255 - round((500 - (500 - curr_val) )/ 2)
-        else :
-            g = 255
-            r = abs(round((1000 - curr_val) / 2))
-        hex_string = convert_to_hex(r, g, b)
-        w.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y, fill=hex_string)
+
+def callback_2():
+    global  rubiks_MDP
+    if rubiks_MDP is None:
+        print("Please press initialization button")
+    else :
+        rubiks_MDP.extractPolicy()
+        best_vals = rubiks_MDP.return_best_policy()
+        top_left_x = 601
+        top_left_y = 32
+        bottom_right_x = 611
+        bottom_right_y = 42
+        '''for i in range(16128):
+            curr_val =random.randrange(1000)
+            max_state_vals.append(curr_val)'''
+        j = 0
+        for element in best_vals:
+            curr_val = rubiks_MDP.maxPolicyVal.get(element)
+            print(curr_val)
+            if(j % 38 == 0):
+                top_left_x = 601
+                bottom_right_x = 611
+                top_left_y = top_left_y + 10
+                bottom_right_y = bottom_right_y + 10
+            else:
+                top_left_x = top_left_x + 10
+                bottom_right_x = bottom_right_x + 10
+            r = 0
+            g = 0
+            b = 0
+            if (curr_val < 500) :
+                if curr_val < 0:
+                    r = 255
+                    g = 0
+                    b = 0
+                else :
+                    r = 255
+                    g = 255 - round((500 - curr_val) / 2)
+                    b = 0
+            else :
+                if curr_val > 1000:
+                    r = 0
+                    g = 255
+                    b = 0
+                else :
+                    g = 255
+                    r = abs(round((1000 - curr_val) / 2))
+                    b = 0
+            hex_string = convert_to_hex(r, g, b)
+            w.create_rectangle(top_left_x, top_left_y, bottom_right_x, bottom_right_y, fill=hex_string)
+            j = j + 1
 
 def convert_to_hex(r, g, b):
     hex_string = "#"
@@ -104,13 +128,13 @@ def convert_to_hex(r, g, b):
     return hex_string
 
 # Prints random colors into boxes
-def callback_2():
+def callback_3():
     top_left_x = [21, 91, 21, 91, 161, 231, 161, 231, 161, 231, 161, 231,\
                   161, 231, 161, 231, 301, 371, 301, 371, 441, 511, 441, 511]
     top_left_y = [166, 166, 236, 236, 166, 166, 236, 236, 26, 26, 96, 96, 306,\
                   306, 376, 376, 166, 166, 236, 236, 166, 166, 236, 236]
     bottom_right_x = [89, 159, 89, 159, 229, 299, 229, 299, 229, 299, 229,\
-                      299, 229, 299, 229, 299, 369, 439, 369, 439, 509, 579, 509, 579]
+                     299, 229, 299, 229, 299, 369, 439, 369, 439, 509, 579, 509, 579]
     bottom_right_y =[234, 234, 304, 304, 234, 234, 304, 304, 94, 94, 164, 164,\
                      374, 374, 444, 444, 234, 234, 304, 304, 234, 234, 304, 304]
     color_vals = []
@@ -131,14 +155,25 @@ def callback_2():
             fill_val = "#f48c06"
         color_vals.append(fill_val)
 
-    for j in range (24):
-        w.create_rectangle(top_left_x[j], top_left_y[j], bottom_right_x[j], bottom_right_y[j], fill=color_vals[j])
+for j in range (24):
+    w.create_rectangle(top_left_x[j], top_left_y[j], bottom_right_x[j], bottom_right_y[j], fill=color_vals[j])
 
+def callback_1():
+    global rubiks_MDP
+    rubiks_MDP.register_start_state("wwoobbggrrrryyyyoowwggbb")
+    rubiks_MDP.register_actions(Test_Rubiks.ACTIONS)
+    rubiks_MDP.register_operators(Test_Rubiks.OPERATORS)
+    rubiks_MDP.register_transition_function(Test_Rubiks.T)
+    rubiks_MDP.register_reward_function(Test_Rubiks.R)
+    rubiks_MDP.QLearning(0.9, 1000, 0.4)
 
-b = Button(master, text="Display Q Values", command=callback)
+a = Button(master, text = "Initialize Solver", command=callback_1)
+a.pack()
+
+b = Button(master, text="Display Q Values", command=callback_2)
 b.pack()
 
-c = Button(master, text="Simulate Rubik's Cube Solution", command=callback_2)
+c = Button(master, text="Simulate Rubik's Cube Solution", command=callback_3)
 c.pack()
 
 mainloop()
